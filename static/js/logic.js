@@ -1,13 +1,6 @@
 // Store our API endpoint as queryUrl.
 var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-// // Perform a GET request to the query URL/
-// d3.json(queryUrl).then(function (data) {
-//   // Once we get a response, send the data.features object to the createFeatures function.
-//   // createFeatures(data.features);
-//   console.log(data)
-// });
-
 // Adding the tile layer
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -17,6 +10,7 @@ var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
   attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
 });
 
+// create base map
 var baseMaps = {
   "Street Map": streets,
   "Topographic Map": topo
@@ -25,14 +19,14 @@ var baseMaps = {
 // Creating the map object
 var myMap = L.map("map", {
   center: [
-    37.09, -95.71
+    25, -25
   ],  
-  zoom: 5,
+  zoom: 2,
   layers: [streets]
 });
 
 var overlayMaps = {
-  
+  earthquakes: 
 };
 
 // adding control layer
@@ -46,6 +40,7 @@ L.control.layers(baseMaps, overlayMaps, {
 d3.json(queryUrl).then(function (data) {
   // Once we get a response, send the data.features object to the createFeatures function.
   // createFeatures(data.features);
+  console.log(data)
 
   // create function for style info
   function style(feature){
@@ -53,7 +48,7 @@ d3.json(queryUrl).then(function (data) {
       radius: getRadius(feature.properties.mag),
       opacity: 1,
       fillColor: getColor(feature.geometry.coordinates[2]),
-      color: "#000000",
+      color: "#ffffff",
       weight: 0.7
     }
   };
@@ -70,13 +65,17 @@ d3.json(queryUrl).then(function (data) {
   function getColor(depth){
     switch (true){
       case depth > 100: 
+        // red
         return "#FF0000";
       case depth > 50: 
+        // green
         return "#00FF00";
       case depth > 10: 
+        // blue
         return "#0000FF";
       default :
-        return "#000000";
+        // black
+        return "#000000"; 
     }
   }
 
@@ -89,18 +88,31 @@ d3.json(queryUrl).then(function (data) {
     onEachFeature: function (feature, layer) {
       // does this feature have a property named popupContent?
       layer.bindPopup(
-        "magnitude:" 
-        + feature.properties.mag
-        + "<br>depth: "
-        + feature.geometry.coordinates[2]
+        "<b>Location: </b>" + feature.properties.place
+        + "<br><b>Magnitude: </b>" + (Math.round((feature.properties.mag + Number.EPSILON)* 100) / 100)
+        + "<br><b>Depth: </b>" + (Math.round((feature.geometry.coordinates[2] + Number.EPSILON) * 100) / 100)
+        + "<br><b>id: </b>" + feature.id
       );
-      }
+    }
   }).addTo(myMap);
   
 });
 
 
+// legend
+var info = L.control({
+  position: "bottomright"
+});
 
+// update legend count
+var earthquakeCount = {
+  earthquake1: 0,
+  earthquake2: 0,
+  earthquake3: 0
+};
+
+// combine TWO SETS OF DATA into one variable list
+var station = Object.assign({}, stationInfo[i], stationStatus[i]);
 
 //   // Store the API query variables.
 //   // For docs, refer to https://dev.socrata.com/docs/queries/where.html.
